@@ -73,7 +73,17 @@ fi
 
 # ─── 4. 环境检查 ─────────────────────────────────────────
 echo ""
-echo "[4/4] 验证环境..."
+echo "[4/5] 安装 git hooks..."
+if [ -d "$SCRIPT_DIR/.git" ]; then
+    cp "$SCRIPT_DIR/hooks/pre-commit" "$SCRIPT_DIR/.git/hooks/pre-commit" 2>/dev/null
+    chmod +x "$SCRIPT_DIR/.git/hooks/pre-commit" 2>/dev/null
+    echo "  ✓ pre-commit hook（每次提交自动递增版本号）"
+else
+    echo "  - 跳过（非 git 仓库）"
+fi
+
+echo ""
+echo "[5/5] 验证环境..."
 echo ""
 python3 "$SCRIPT_DIR/skills/check_env.py" && ENV_OK=1 || ENV_OK=0
 
