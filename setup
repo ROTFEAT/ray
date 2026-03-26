@@ -22,17 +22,20 @@ echo "  ✓ Python $PY_VER"
 # ─── 2. 安装依赖 ─────────────────────────────────────────
 echo ""
 echo "[2/6] 安装 Python 依赖..."
+# 切到 /tmp 安装，避免项目目录名 ray 和 pip 包名冲突
+pushd /tmp > /dev/null
 if command -v uv >/dev/null 2>&1; then
     uv pip install ray minio 2>/dev/null && echo "  ✓ ray, minio 已安装 (via uv)" || {
-        echo "  ✗ 安装失败，请手动运行: uv pip install ray minio"
-        exit 1
+        echo "  ✗ 安装失败，请手动运行: cd /tmp && uv pip install ray minio"
+        popd > /dev/null; exit 1
     }
 else
     pip3 install -q ray minio 2>/dev/null && echo "  ✓ ray, minio 已安装 (via pip)" || {
-        echo "  ✗ 安装失败，请手动运行: pip install ray minio"
-        exit 1
+        echo "  ✗ 安装失败，请手动运行: cd /tmp && pip install ray minio"
+        popd > /dev/null; exit 1
     }
 fi
+popd > /dev/null
 
 # ─── 3. 配置 .env ────────────────────────────────────────
 echo ""
