@@ -4,7 +4,7 @@
 
 ## 集群信息
 
-- Ray 版本: 2.54.0, Python 3.10
+- Ray 版本: 2.54.0, Python 3.12
 - 集群规模: 248 CPU, 2TB+ 内存, 6 节点（1 Head + 5 Worker）
 - Head 不跑任务（--num-cpus=0），248 CPU 全在 Worker
 - 无 GPU
@@ -67,7 +67,7 @@ python $RAY_DIR/skills/check_env.py
 6. **硬编码本地路径**: 引用了不存在于集群节点的本地文件路径（如 `/Users/xxx/data.csv`）
 7. **缺少 ray.init()**: 脚本没有调用 `ray.init()`
 8. **请求 GPU 但集群无 GPU**: 使用了 `num_gpus > 0`
-9. **Python 3.11+ 语法**: 使用了 `ExceptionGroup`、`TaskGroup`、`tomllib`、`type` 语句等 3.11+ 特性 — 集群只有 Python 3.10
+9. **Python 3.13+ 语法**: 使用了 3.13+ 特性（如 `type` 参数默认值等）— 集群是 Python 3.12
 10. **minio 依赖未声明**: 使用了 `save_result()` 或 `from minio import` 但没把 `minio` 加入依赖列表
 11. **ray.init() 写了固定地址**: `ray.init("ray://...")` 会绕过 Jobs API。应使用 `ray.init()` 不带参数
 
@@ -241,7 +241,7 @@ sleep 30 && python skills/progress_check.py <job_id>
 
 ## 注意事项
 
-- 集群 Python 版本是 3.10，不要用 3.11+ 语法特性
+- 集群 Python 版本是 3.12，不要用 3.13+ 语法特性
 - numpy 数组从 object store 取出是只读的，修改前需 `.copy()`
 - Ray 资源调度是逻辑的，不强制物理限制，任务可能超出声明的资源导致 OOM
 - 每个 worker 节点端口范围 10002-10300（298 个并发 worker）

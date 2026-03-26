@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from skills.config import get
 
 REGISTRY = get("REGISTRY_URL", "")
-BASE_IMAGE = "rayproject/ray:2.54.0-py310"
+BASE_IMAGE = "rayproject/ray:2.54.0-py312"
 
 
 def build_and_push(name, pip_packages=None, requirements_file=None):

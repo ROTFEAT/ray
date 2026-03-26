@@ -4,7 +4,7 @@
 
 ## 集群信息
 
-- Ray 版本: 2.54.0, Python 3.10
+- Ray 版本: 2.54.0, Python 3.12
 - 集群规模: 248 CPU, 2TB+ 内存, 6 节点
 - 无 GPU
 - 结果通过 MinIO 持久化
@@ -125,7 +125,7 @@ if __name__ == "__main__":
 7. 不用 `multiprocessing`
 8. 不用 `num_gpus`（集群无 GPU）
 9. 确保 `save_result()` 在脚本中，方便拿回结果
-10. 只用 Python 3.10 兼容的语法
+10. 只用 Python 3.12 兼容的语法
 
 ### 第四步：逐段解释代码
 
@@ -279,7 +279,7 @@ results = ray.get(futures)
 
 ## 注意事项
 
-- 集群 Python 3.10，不要用 3.11+ 语法
+- 集群 Python 3.12，不要用 3.13+ 语法
 - numpy 数组从 object store 取出是只读的，修改前需 `.copy()`
 - 不要在 remote 函数里 `return ray.put(x)`，直接 `return x`
 - 每个任务至少毫秒级计算量，太细的任务调度开销大于收益
