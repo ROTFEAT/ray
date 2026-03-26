@@ -19,6 +19,23 @@ fi
 PY_VER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
 echo "  ✓ Python $PY_VER"
 
+# 检查 venv 名称冲突
+VENV_PATH="${VIRTUAL_ENV:-}"
+if [ -n "$VENV_PATH" ]; then
+    VENV_NAME=$(basename "$VENV_PATH")
+    if [ "$VENV_NAME" = "ray" ]; then
+        echo ""
+        echo "  ⚠ 当前 venv 名称是 'ray'，会和 pip 包 ray 冲突！"
+        echo "  请退出当前 venv 后重建："
+        echo "    deactivate"
+        echo "    rm -rf $VENV_PATH"
+        echo "    python3 -m venv .venv"
+        echo "    source .venv/bin/activate"
+        echo "    ./setup"
+        exit 1
+    fi
+fi
+
 # ─── 2. 安装依赖 ─────────────────────────────────────────
 echo ""
 echo "[2/6] 安装 Python 依赖..."
