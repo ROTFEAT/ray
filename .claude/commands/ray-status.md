@@ -9,16 +9,25 @@
 
 ## 前置检查（每次必须执行）
 
-在做任何事之前，依次运行：
+在做任何事之前，先确定项目路径，然后运行检查：
 
 ```bash
-python skills/update_check.py
-python skills/check_env.py
+RAY_DIR=$(cat ~/.claude/.ray-skills-path 2>/dev/null || echo "")
+echo "RAY_DIR: $RAY_DIR"
+```
+
+如果 `RAY_DIR` 为空，说明未安装。提示用户运行 `git clone https://github.com/ROTFEAT/ray.git && cd ray && ./setup`。
+
+```bash
+python $RAY_DIR/skills/update_check.py
+python $RAY_DIR/skills/check_env.py
 ```
 
 **版本检查：** 如果输出"有更新可用"，告知用户并建议更新。不阻断流程。
 
-**环境检查：** 如果输出 `FAIL`，提示运行 `./setup` 交互式配置。**环境检查通过后才继续。**
+**环境检查：** 如果输出 `FAIL`，提示运行 `cd $RAY_DIR && ./setup` 交互式配置。**环境检查通过后才继续。**
+
+**后续所有命令中的 `skills/` 路径都替换为 `$RAY_DIR/skills/`。**
 
 ## 意图路由
 
