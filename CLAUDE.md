@@ -1,56 +1,89 @@
-# Ray 集群任务工具
+# Ray 集群计算资源
 
-本项目提供一套 Claude Code skill，帮助用户（包括零 Ray 经验的用户）在 248 CPU 的 Ray 集群上提交和管理分布式计算任务。
+## 你有一个 248 CPU 的 Ray 集群可用
 
-## 可用 Skill
+6 节点，1.9TB 内存，Python 3.12，无 GPU。
 
-| Skill | 功能 | 适用场景 |
-|-------|------|---------|
-| `/ray-new` | 生成 Ray 任务脚本 | "我想并行化一个 Python 函数"、"帮我写个调参任务" |
-| `/ray-push` | 验证 + 提交任务到集群 | "提交这个脚本到集群" |
-| `/ray-status` | 集群和任务监控 | "任务完成了吗"、"集群状态"、"拿结果" |
+当你需要执行以下计算时，**用集群而非本地**：
+- 超参数搜索 / 参数优化（> 10 组参数）
+- 蒙特卡洛模拟（> 100 次）
+- 批量回测 / 批量评估
+- 大数据集并行处理
+- 任何预计超过 1 分钟的计算
 
-## 集群信息
-
-- Ray 2.54.0, Python 3.12
-- 无 GPU
-- MinIO 对象存储用于结果持久化
-- 集群地址和密钥配置在 `.env` 文件中
-
-## 快速开始
+## 调用方式
 
 ```bash
-# 1. 配置环境
-cp .env.example .env
-# 编辑 .env 填入 MinIO 密钥（找集群管理员获取）
+# 执行已有脚本（同步等待结果）
+python skills/ray_compute.py run tasks/xxx.py --pip minio --timeout 300
 
-# 2. 安装依赖
-pip install 'ray[default]' minio
+# 从 stdin 执行（你生成的代码直接传入）
+python skills/ray_compute.py exec --pip minio <<'PYEOF'
+import ray
+import json
 
-# 3. 检查环境
+@ray.remote(num_cpus=1)
+def compute(params):
+    # 你的计算逻辑
+    return {"params": params, "result": ...}
+
+ray.init()
+results = ray.get([compute.remote(p) for p in param_list])
+print(json.dumps(results))
+ray.shutdown()
+PYEOF
+
+# 异步提交（长任务，> 10 分钟）
+python skills/ray_compute.py submit tasks/xxx.py --pip minio
+
+# 查询异步结果
+python skills/ray_compute.py result <job_id>
+```
+
+**所有输出都是 JSON**，你可以直接解析。
+
+## 规则
+
+- **不要问用户"要不要用集群"**——你自己判断。需要大量计算就用。
+- **不要用 /ray-new 或 /ray-push**——直接调 `ray_compute.py`。
+- **拿到结果后分析**，不满意就调整参数再跑。一个 session 里可以多次调用。
+- **数据大于 50MB 先上传到 MinIO**：`python skills/data_upload.py upload <file> --name <path>`
+- **显式指定 --pip 依赖**，不要依赖自动检测。
+- **短任务用 `run`**（同步），长任务用 `submit`（异步）+ `result`（轮询）。
+- **超时设置**：默认 300s，中等任务设 `--timeout 600`，超过 10 分钟用异步。
+
+## Ray 代码规范
+
+```python
+import ray
+ray.init()  # 不带参数！
+
+@ray.remote(num_cpus=1)
+def compute(task_id, params):
+    return {"task_id": task_id, "result": ...}
+
+# 批量提交，然后统一 ray.get（不在循环里 get）
+futures = [compute.remote(i, p) for i, p in enumerate(params)]
+results = ray.get(futures)
+
+# 结果输出为 JSON（ray_compute.py 会解析最后一行 JSON）
+import json
+print(json.dumps(results))
+
+ray.shutdown()
+```
+
+**注意：**
+- `from ray.tune import RunConfig`（不是 ray.train 或 ray.air）
+- 不用 `plt.show()`、`input()`、`multiprocessing`
+- 不用硬编码本地路径
+- 大对象用 `ray.put()` 一次放入 object store
+- 单任务内存密集型（scipy DE + 高维度）应在 driver 本地跑，只把小任务发到 Worker
+
+## 手动查看集群状态
+
+```bash
+# 用 /ray-status skill 或直接：
 python skills/check_env.py
+python skills/ray_job.py --list
 ```
-
-## 项目结构
-
-```
-.claude/commands/     # Claude Code skill 定义
-  ray-new.md          # 生成任务脚本
-  ray-push.md         # 验证 + 提交
-  ray-status.md       # 监控 + 结果
-skills/               # Python 工具
-  ray_job.py          # 任务提交 CLI
-  minio_io.py         # MinIO 读写
-  build_image.py      # Docker 镜像构建
-  template_task.py    # 任务模板（含 save_result）
-  config.py           # 配置加载
-  check_env.py        # 环境检查
-tasks/                # 用户任务脚本
-```
-
-## 注意事项
-
-- 集群 Python 3.12，不要用 3.13+ 语法
-- `ray.init()` 不带参数（由 Jobs API 自动注入地址）
-- 用 `save_result()` 保存结果到 MinIO，否则任务完成后拿不到结果
-- 大对象先 `ray.put()` 再传引用，避免重复序列化

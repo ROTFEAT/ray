@@ -124,18 +124,47 @@ if [ "$NEED_CONFIG" = "1" ]; then
     fi
 fi
 
-# ─── 4. 安装全局 Skill ───────────────────────────────────
+# ─── 4. 安装全局 Skill + CLAUDE.md ────────────────────────
 echo ""
-echo "[4/6] 安装 Claude Code skills..."
+echo "[4/6] 安装 Claude Code skills + 计算资源指令..."
 mkdir -p ~/.claude/commands
-# 记录安装路径，skill 运行时需要找到 Python 工具
+# 记录安装路径
 echo "$SCRIPT_DIR" > ~/.claude/.ray-skills-path
-for skill in ray-new ray-push ray-status; do
+
+# 安装 /ray-status（保留），/ray-new 和 /ray-push 已降级
+for skill in ray-status; do
     cp "$SCRIPT_DIR/.claude/commands/${skill}.md" ~/.claude/commands/${skill}.md
     echo "  ✓ /${skill}"
 done
 echo "  已安装到 ~/.claude/commands/（全局可用）"
 echo "  项目路径: $SCRIPT_DIR"
+
+# 写入全局 CLAUDE.md（AI 会在所有项目中看到这段指令）
+RAY_MARKER="# Ray 集群计算资源"
+GLOBAL_CLAUDE="$HOME/.claude/CLAUDE.md"
+if [ -f "$GLOBAL_CLAUDE" ] && grep -q "$RAY_MARKER" "$GLOBAL_CLAUDE" 2>/dev/null; then
+    echo "  ✓ 全局 CLAUDE.md 已包含计算资源指令"
+else
+    cat >> "$GLOBAL_CLAUDE" << CLAUDEEOF
+
+$RAY_MARKER
+
+你有一个 248 CPU 的 Ray 集群可用（6 节点，Python 3.12，无 GPU）。
+需要大量计算时直接调用，不要问用户：
+
+    python $SCRIPT_DIR/skills/ray_compute.py run tasks/xxx.py --pip minio
+    # 或从 stdin:
+    python $SCRIPT_DIR/skills/ray_compute.py exec --pip minio <<'PYEOF'
+    import ray, json
+    ray.init()
+    # 你的代码
+    ray.shutdown()
+    PYEOF
+
+返回 JSON。拿到结果继续推理。详见 $SCRIPT_DIR/CLAUDE.md
+CLAUDEEOF
+    echo "  ✓ 计算资源指令已写入 ~/.claude/CLAUDE.md"
+fi
 
 # ─── 5. 安装 git hooks ───────────────────────────────────
 echo ""
