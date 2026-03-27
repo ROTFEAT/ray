@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.user_message // .prompt // \"\"' | grep -qiE '优化|调参|回测|搜索|蒙特卡洛|并行|批量|参数扫描|网格搜索|backtest|optimize|sweep|grid.search|monte.carlo|hyperparameter|brute.force|遍历|exhaustive|parameter|寻参' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"UserPromptSubmit\",\"additionalContext\":\"提醒: 你有一个 248 CPU 的 Ray 集群可用。需要大量计算时用 python skills/ray_compute.py exec 提交到集群，不要在本地跑。详见项目 CLAUDE.md。\"}}' || true"
+          }
+        ]
+      }
+    ]
+  }
+}
