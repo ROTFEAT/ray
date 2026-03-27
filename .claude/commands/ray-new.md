@@ -360,6 +360,10 @@ python -c "import ast; ast.parse(open('<脚本路径>').read())" && echo "SYNTAX
 - [ ] 没有 `plt.show()`、`input()`、`multiprocessing`
 - [ ] 没有硬编码本地路径
 - [ ] `save_result()` 存在且被调用
+- [ ] **没有已弃用的导入**：不能用 `from ray.air import ...`、`from ray.train import RunConfig`。Ray 2.54 正确用法：
+    - `RunConfig` → `from ray.tune import RunConfig`
+    - `session.report()` → 直接 `return {"metric": value}`（Tune function API）
+    - `from ray.air import session` → 删除，不需要
 - [ ] 所有第三方 import 都列入了依赖
 - [ ] 请求资源不超集群上限（num_cpus <= 248, num_gpus = 0）
 - [ ] 数据读取从 MinIO 而不是本地文件/数据库
@@ -483,6 +487,7 @@ results = ray.get(futures)
 
 ```python
 from ray import tune
+from ray.tune import RunConfig          # 注意：从 ray.tune 导入，不是 ray.train 或 ray.air
 from ray.tune.search.optuna import OptunaSearch
 
 def objective(config):
@@ -496,6 +501,10 @@ tuner = tune.Tuner(
         search_alg=OptunaSearch(metric="loss", mode="min"),
         num_samples=1000,
         max_concurrent_trials=248,
+    ),
+    run_config=RunConfig(
+        name="experiment_name",
+        verbose=1,
     ),
 )
 results = tuner.fit()

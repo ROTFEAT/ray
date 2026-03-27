@@ -3,14 +3,10 @@ Ray Tune + Optuna 调参测试
 在 Ray 集群上用 Optuna 搜索 Ackley 函数的全局最小值 (最优解在原点, 值为0)
 压力测试: 1000 trials, 248 并发, 20维搜索空间
 """
-import os
-os.environ["RAY_TRAIN_ENABLE_V2_MIGRATION_WARNINGS"] = "0"
-
 import numpy as np
 import ray
 from ray import tune
 from ray.tune.search.optuna import OptunaSearch
-from ray.air import session
 
 def ackley(config):
     """Ackley function - 经典多维优化测试函数"""

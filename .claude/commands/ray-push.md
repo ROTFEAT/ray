@@ -82,6 +82,7 @@ python $RAY_DIR/skills/check_env.py
     - 大数据用 `ray.put()` 一次放入 object store，Worker 引用而非各自加载
     - 内存密集型任务声明 `@ray.remote(num_cpus=1, memory=4*1024**3)` 让调度器感知
 13. **pip 依赖格式错误**: `--pip` 参数中多个包用空格而非逗号分隔（如 `scipy minio` 应为 `scipy,minio`）
+14. **已弃用的 Ray 导入**: `from ray.air import session`、`from ray.train import RunConfig` 在 Ray 2.54 中已弃用。正确用法：`from ray.tune import RunConfig`，`session.report()` 改为直接 `return {"metric": value}`
 
 #### 建议项（不阻断提交，但建议优化）
 
