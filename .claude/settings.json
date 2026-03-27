@@ -9,6 +9,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // \"\"' | grep -q 'ray_compute.py' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"你刚才用了 Ray 集群计算。后续如果还有计算密集型步骤，继续用 ray_compute.py 提交到集群。不要切回本地计算。拿到结果后分析，不满意就调参数再跑。\"}}' || true"
+          }
+        ]
+      }
     ]
   }
 }
