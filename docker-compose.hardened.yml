@@ -1,0 +1,108 @@
+version: "3.9"
+
+services:
+  ray-head:
+    image: rayproject/ray:2.54.0-py312
+    hostname: ray-head
+    networks:
+      hostnet: {}
+    volumes:
+      - /data/ray:/tmp/ray
+      - gcs-data:/data/gcs_storage
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 214748364800
+    command: >
+      bash -lc "
+      rm -rf /tmp/ray/*
+      && ray start --head
+      --node-ip-address=192.168.3.169
+      --port=6379
+      --dashboard-host=0.0.0.0
+      --dashboard-port=8265
+      --ray-client-server-port=10001
+      --node-manager-port=8076
+      --object-manager-port=8077
+      --min-worker-port=10002
+      --max-worker-port=10300
+      --num-cpus=0
+      --disable-usage-stats
+      --storage=/data/gcs_storage
+      --system-config='{\"worker_killing_policy\":\"retriable_lifo\",\"memory_usage_threshold\":0.85}'
+      && tail -f /dev/null
+      "
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.ray.role == head
+      resources:
+        limits:
+          memory: 64G
+        reservations:
+          memory: 8G
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+        window: 300s
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8265/api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  ray-worker:
+    image: rayproject/ray:2.54.0-py312
+    networks:
+      hostnet: {}
+    volumes:
+      - /data/ray:/tmp/ray
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 214748364800
+    command: >
+      bash -lc "
+      rm -rf /tmp/ray/*
+      && ray start
+      --address=192.168.3.169:6379
+      --node-manager-port=8076
+      --object-manager-port=8077
+      --min-worker-port=10002
+      --max-worker-port=10300
+      --disable-usage-stats
+      --object-store-memory=20000000000
+      && tail -f /dev/null
+      "
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.labels.ray.role == worker
+      resources:
+        limits:
+          memory: 64G
+        reservations:
+          memory: 8G
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 5
+        window: 300s
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:52365/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+networks:
+  hostnet:
+    external: true
+    name: host
+
+volumes:
+  gcs-data:
