@@ -58,24 +58,22 @@ def main():
     if "UserPromptSubmit" not in settings["hooks"]:
         settings["hooks"]["UserPromptSubmit"] = []
 
-    # 检查是否已有 ray 相关 hook
-    has_ray_user_hook = any(
-        "ray_compute.py" in json.dumps(h)
-        for h in settings["hooks"]["UserPromptSubmit"]
-    )
-    if not has_ray_user_hook:
-        settings["hooks"]["UserPromptSubmit"].append(user_hook)
+    # 移除旧的 ray hook（如果有），再添加新的——这样更新时内容也会刷新
+    settings["hooks"]["UserPromptSubmit"] = [
+        h for h in settings["hooks"]["UserPromptSubmit"]
+        if "ray_compute.py" not in json.dumps(h)
+    ]
+    settings["hooks"]["UserPromptSubmit"].append(user_hook)
 
-    # 合并 PostToolUse
+    # PostToolUse 同理
     if "PostToolUse" not in settings["hooks"]:
         settings["hooks"]["PostToolUse"] = []
 
-    has_ray_post_hook = any(
-        "ray_compute.py" in json.dumps(h)
-        for h in settings["hooks"]["PostToolUse"]
-    )
-    if not has_ray_post_hook:
-        settings["hooks"]["PostToolUse"].append(post_hook)
+    settings["hooks"]["PostToolUse"] = [
+        h for h in settings["hooks"]["PostToolUse"]
+        if "ray_compute.py" not in json.dumps(h)
+    ]
+    settings["hooks"]["PostToolUse"].append(post_hook)
 
     # 写回
     os.makedirs(os.path.dirname(settings_path), exist_ok=True)
