@@ -5,7 +5,7 @@
 ## 安装
 
 ```bash
-git clone https://github.com/ROTFEAT/ray.git && cd ray && ./setup
+git clone https://github.com/ROTFEAT/RayCompute.git && cd ray && ./setup
 ```
 
 不需要装任何 pip 包。`setup` 交互式配置集群地址和密钥，自动写入 `~/.claude/CLAUDE.md`。
