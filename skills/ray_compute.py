@@ -171,38 +171,7 @@ def fetch_result(job_id):
 
     prefix = f"jobs/{job_id}/"
 
-    # 尝试用 minio 包（更可靠）
-    try:
-        from minio import Minio
-        client = Minio(MINIO_ENDPOINT, access_key=MINIO_ACCESS_KEY,
-                       secret_key=MINIO_SECRET_KEY, secure=False)
-        objects = list(client.list_objects(MINIO_BUCKET, prefix=prefix, recursive=True))
-        if not objects:
-            return None, []
-
-        results = {}
-        local_files = []
-        for obj in objects:
-            filename = obj.object_name.replace(prefix, "")
-            local_path = os.path.join(local_dir, filename)
-            os.makedirs(os.path.dirname(local_path), exist_ok=True)
-            client.fget_object(MINIO_BUCKET, obj.object_name, local_path)
-            local_files.append(local_path)
-
-            if filename.endswith(".json"):
-                try:
-                    with open(local_path) as f:
-                        results[filename] = json.load(f)
-                except (json.JSONDecodeError, UnicodeDecodeError):
-                    results[filename] = f"file://{local_path}"
-            else:
-                results[filename] = f"file://{local_path}"
-        return results, local_files
-
-    except ImportError:
-        pass
-
-    # Fallback: 纯 HTTP 方式（MinIO 兼容 S3 ListObjects API 但需签名，这里用简单路径猜测）
+    # 方法 1: urllib + MinIO presigned-like URL（公开 bucket）
     common_files = ["result.json", "summary.json"]
     results = {}
     local_files = []
@@ -211,13 +180,43 @@ def fetch_result(job_id):
         local_path = os.path.join(local_dir, filename)
         try:
             urllib.request.urlretrieve(url, local_path)
-            local_files.append(local_path)
-            if filename.endswith(".json"):
-                with open(local_path) as f:
-                    results[filename] = json.load(f)
+            if os.path.getsize(local_path) > 0:
+                local_files.append(local_path)
+                if filename.endswith(".json"):
+                    with open(local_path) as f:
+                        results[filename] = json.load(f)
+            else:
+                os.unlink(local_path)
         except Exception:
             if os.path.exists(local_path):
                 os.unlink(local_path)
+
+    if results:
+        return results, local_files
+
+    # Fallback 2: curl（支持 Basic Auth 访问私有 bucket）
+    import shutil
+    if shutil.which("curl"):
+        for filename in common_files:
+            url = f"http://{MINIO_ENDPOINT}/{MINIO_BUCKET}/{prefix}{filename}"
+            local_path = os.path.join(local_dir, filename)
+            try:
+                ret = subprocess.run(
+                    ["curl", "-sf", "-u", f"{MINIO_ACCESS_KEY}:{MINIO_SECRET_KEY}",
+                     "-o", local_path, url],
+                    capture_output=True, timeout=30
+                )
+                if ret.returncode == 0 and os.path.exists(local_path) and os.path.getsize(local_path) > 0:
+                    local_files.append(local_path)
+                    if filename.endswith(".json"):
+                        with open(local_path) as f:
+                            results[filename] = json.load(f)
+                else:
+                    if os.path.exists(local_path):
+                        os.unlink(local_path)
+            except Exception:
+                if os.path.exists(local_path):
+                    os.unlink(local_path)
 
     if not results:
         return None, []

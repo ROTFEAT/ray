@@ -36,18 +36,10 @@ if [ -n "$VENV_PATH" ]; then
     fi
 fi
 
-# ─── 2. 依赖检查 ─────────────────────────────────────────
+# ─── 2. 依赖 ─────────────────────────────────────────────
 echo ""
-echo "[2/6] 检查依赖..."
-echo "  核心功能（ray_compute.py）使用纯 HTTP API，无需安装额外包。"
-# minio 包是可选的（结果拉取更可靠），不强制
-pushd /tmp > /dev/null
-if python3 -c "import minio" 2>/dev/null; then
-    echo "  ✓ minio 包已安装（结果拉取更可靠）"
-else
-    echo "  - minio 包未安装（可选，安装后结果拉取更可靠: pip install minio）"
-fi
-popd > /dev/null
+echo "[2/6] 依赖..."
+echo "  ✓ 零依赖 — 使用 Ray Dashboard REST API，无需安装 pip 包"
 
 # ─── 3. 配置 .env ────────────────────────────────────────
 echo ""
