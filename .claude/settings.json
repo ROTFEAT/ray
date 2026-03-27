@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.user_message // .prompt // \"\"' | grep -qiE '优化|调参|回测|搜索|蒙特卡洛|并行|批量|参数扫描|网格搜索|backtest|optimize|sweep|grid.search|monte.carlo|hyperparameter|brute.force|遍历|exhaustive|parameter|寻参' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"UserPromptSubmit\",\"additionalContext\":\"提醒: 你有一个 248 CPU 的 Ray 集群可用。需要大量计算时用 python skills/ray_compute.py exec 提交到集群，不要在本地跑。详见项目 CLAUDE.md。\"}}' || true"
+            "command": "jq -r '.user_message // .prompt // \"\"' | grep -qiE '优化|调参|回测|搜索|蒙特卡洛|并行|批量|参数扫描|网格搜索|遍历|寻参|暴力|穷举|模拟|仿真|训练|推理|预测|交叉验证|特征工程|清洗|ETL|爬虫|抓取|压测|基准测试|性能测试|跑一遍|跑一轮|全量|大规模|分布式|集群|多核|加速|提速|太慢|跑不动|算力|算一下|计算量|耗时|几小时|几天|上百|上千|上万|百万|千万|亿|backtest|optimize|sweep|grid.search|monte.carlo|hyperparameter|brute.force|exhaustive|parameter|tune|search|benchmark|simulate|simulation|train|inference|predict|cross.valid|feature.engineer|pipeline|batch|parallel|distributed|cluster|scale.up|speed.up|too.slow|compute|crunch|permutation|combination|bootstrap|resampl|k.fold|walk.forward|rolling.window|sensitivity|stress.test|scenario|what.if|ablation|grid|random.search|bayesian|optuna|scipy.optimize|differential.evolution|genetic|evolutionary|anneal|particle.swarm|gradient.free|black.box|objective.function|loss.function|fitness|reward|episode|rollout|trajectory|reinforcement|rl.train|ray.tune|ray.data|ray.train|num_samples|max_concurrent|popsize|maxiter|n_jobs|n_iter|trial|experiment|epoch|batch_size' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"UserPromptSubmit\",\"additionalContext\":\"提醒: 你有一个 248 CPU 的 Ray 集群可用。需要大量计算时用 python skills/ray_compute.py exec 提交到集群，不要在本地跑。详见项目 CLAUDE.md。\"}}' || true"
           }
         ]
       }
