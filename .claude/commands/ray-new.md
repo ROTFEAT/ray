@@ -19,7 +19,7 @@ RAY_DIR=$(cat ~/.claude/.ray-skills-path 2>/dev/null || echo "")
 echo "RAY_DIR: $RAY_DIR"
 ```
 
-如果 `RAY_DIR` 为空，说明未安装。提示用户运行 `git clone https://github.com/ROTFEAT/ray.git && cd ray && ./setup`。
+如果 `RAY_DIR` 为空，说明未安装。提示用户运行 `git clone https://github.com/ROTFEAT/RayCompute.git && cd RayCompute && ./setup`。
 
 ```bash
 python $RAY_DIR/skills/update_check.py
